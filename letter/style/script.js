@@ -1,128 +1,157 @@
 $(document).ready(function () {
-  const envelope = $('#envelope');
-  const openBtn = $("#openBtn");
-  const resetBtn = $("#resetBtn");
 
-  let currentPage = 1;
-  const totalPages = 25;
-  let isOpen = false;
+    const envelope = $('#envelope');
+    const openBtn = $("#openBtn");
+    const resetBtn = $("#resetBtn");
+    const audio = $("#sound")[0];
 
-  envelope.on('click', function () {
-      if (isOpen) nextLyric();
-  });
+    let currentPage = 1;
+    const totalPages = 25;
+    let isOpen = false;
+    let typingTimeout = null;
+    let isTyping = false;
+    let hasPlayed = false;
 
-  openBtn.on('click', function () {
-      envelope.removeClass("close").addClass("open");
-      isOpen = true;
-      openBtn.hide();
-      resetBtn.show();
-  });
-
-  resetBtn.on('click', function () {
-      envelope.removeClass("open").addClass("close");
-      isOpen = false;
-      setTimeout(function () {
-          currentPage = 1;
-          updateActivePage();
-          resetBtn.hide();
-          openBtn.show();
-      }, 600);
-  });
-
-  function nextLyric() {
-      currentPage = currentPage < totalPages ? currentPage + 1 : 1;
-      updateActivePage();
-  }
-
-  function updateActivePage() {
-    $(".lyric-page").removeClass("active");
-    $("#page" + currentPage).addClass("active");
-
-    if (currentPage === totalPages) {
-        bigLoveEffect();
+    /* ======================
+       🎵 Play audio 1 lần
+    ====================== */
+    function playAudioOnce() {
+        if (!hasPlayed && audio) {
+            audio.play().catch(()=>{});
+            hasPlayed = true;
+        }
     }
-}
-function bigLoveEffect() {
 
-    // 💓 Tim lớn rung
-    const bigHeart = document.createElement("div");
-    bigHeart.className = "big-heart";
-    bigHeart.innerHTML = "💗";
-    document.body.appendChild(bigHeart);
+    /* ======================
+       💌 Mở thiệp
+    ====================== */
+    openBtn.on('click', function () {
 
-    // 💥 Tạo nhiều tim nhỏ bay nền
-    for (let i = 0; i < 20; i++) {
-        const smallHeart = document.createElement("div");
-        smallHeart.className = "mini-heart";
-        smallHeart.innerHTML = "💖";
+        if (isOpen) return; // chống bấm nhanh
 
-        smallHeart.style.left = Math.random() * 100 + "vw";
-        smallHeart.style.animationDuration = (3 + Math.random() * 2) + "s";
-        smallHeart.style.fontSize = (15 + Math.random() * 25) + "px";
+        envelope.removeClass("close").addClass("open");
+        isOpen = true;
 
-        document.body.appendChild(smallHeart);
+        openBtn.hide();
+        resetBtn.show();
+
+        playAudioOnce();
 
         setTimeout(() => {
-            smallHeart.remove();
-        }, 5000);
+            typeCurrentPage();
+        }, 800);
+    });
+
+    /* ======================
+       🔄 Đóng thiệp
+    ====================== */
+    resetBtn.on('click', function () {
+
+        envelope.removeClass("open").addClass("close");
+        isOpen = false;
+
+        currentPage = 1;
+        stopTyping();
+        updateActivePage();
+
+        resetBtn.hide();
+        openBtn.show();
+    });
+
+    /* ======================
+       👉 Click thiệp để qua trang
+    ====================== */
+    envelope.on('click', function () {
+        if (!isOpen || isTyping) return;
+        nextPage();
+    });
+
+    function nextPage() {
+        currentPage = currentPage < totalPages ? currentPage + 1 : 1;
+        updateActivePage();
     }
 
-    // ✨ Chữ bắn lên
-    const loveText = document.createElement("div");
-    loveText.className = "love-text";
-    loveText.innerText = "anh yeuuu bống👀";
-    document.body.appendChild(loveText);
+    /* ======================
+       📄 Update trang
+    ====================== */
+    function updateActivePage() {
 
-    setTimeout(() => {
-        bigHeart.remove();
-        loveText.remove();
-    }, 3000);
-}
+        $(".lyric-page").removeClass("active");
+        $("#page" + currentPage).addClass("active");
 
+        stopTyping();
+        typeCurrentPage();
 
-// 💗 Hàm tạo tim nở
-function showBigHeart() {
-    const heart = document.createElement("div");
-    heart.className = "big-heart";
-    heart.innerHTML = "💗";
-    document.body.appendChild(heart);
-
-    setTimeout(() => {
-        heart.remove();
-    }, 1500);
-}
-
-});
-
-const openBtn = document.getElementById("openBtn");
-const resetBtn = document.getElementById("resetBtn");
-const envelope = document.getElementById("envelope");
-const audio = document.getElementById("sound");
-
-let hasPlayed = false;
-
-function playAudioOnce() {
-    if (!hasPlayed) {
-        audio.play().then(() => {
-            hasPlayed = true;
-        }).catch((e) => {
-            console.log("Không thể phát nhạc:", e);
-        });
+        if (currentPage === totalPages) {
+            setTimeout(bigLoveEffect, 1200);
+        }
     }
-}
 
-openBtn.addEventListener("click", function () {
-    envelope.classList.remove("close");
-    envelope.classList.add("open");
-    openBtn.style.display = "none";
-    resetBtn.style.display = "inline-block";
-    playAudioOnce();
-});
+    /* ======================
+       ⌨ Typing effect mượt
+    ====================== */
+    function typeCurrentPage() {
 
-resetBtn.addEventListener("click", function () {
-    envelope.classList.remove("open");
-    envelope.classList.add("close");
-    openBtn.style.display = "inline-block";
-    resetBtn.style.display = "none";
-    playAudioOnce();
+        const activePage = document.querySelector(".lyric-page.active p");
+        if (!activePage) return;
+
+        const fullText = activePage.dataset.text || activePage.textContent;
+
+        activePage.dataset.text = fullText;
+        activePage.textContent = "";
+
+        let i = 0;
+        isTyping = true;
+
+        function typing() {
+            if (i < fullText.length) {
+                activePage.textContent += fullText.charAt(i);
+                i++;
+                typingTimeout = setTimeout(typing, 40);
+            } else {
+                isTyping = false;
+            }
+        }
+
+        typing();
+    }
+
+    function stopTyping() {
+        clearTimeout(typingTimeout);
+        isTyping = false;
+    }
+
+    /* ======================
+       💖 Hiệu ứng cuối
+    ====================== */
+    function bigLoveEffect() {
+
+        const bigHeart = $("<div class='big-heart'>💗</div>");
+        $("body").append(bigHeart);
+
+        for (let i = 0; i < 20; i++) {
+            const smallHeart = $("<div class='mini-heart'>💖</div>");
+
+            smallHeart.css({
+                left: Math.random() * 100 + "vw",
+                fontSize: (15 + Math.random() * 25) + "px",
+                animationDuration: (3 + Math.random() * 2) + "s"
+            });
+
+            $("body").append(smallHeart);
+
+            setTimeout(() => {
+                smallHeart.remove();
+            }, 5000);
+        }
+
+        const loveText = $("<div class='love-text'>anh yeuuu bống👀</div>");
+        $("body").append(loveText);
+
+        setTimeout(() => {
+            bigHeart.remove();
+            loveText.remove();
+        }, 3000);
+    }
+
 });
