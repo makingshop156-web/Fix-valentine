@@ -3,8 +3,14 @@ $(document).ready(function () {
     const envelope = $('#envelope');
     const openBtn = $("#openBtn");
     const resetBtn = $("#resetBtn");
+    const prevBtn = $("#prevBtn");
+    const nextBtn = $("#nextBtn");
+    const navigationArea = $("#navigationArea");
+    const progressContainer = $("#progressContainer");
+    const progressFill = $("#progressFill");
+    const progressText = $("#progressText");
     const audio = $("#sound")[0];
-
+    
     let currentPage = 1;
     const totalPages = 25;
     let isOpen = false;
@@ -26,8 +32,7 @@ $(document).ready(function () {
        💌 Mở thiệp
     ====================== */
     openBtn.on('click', function () {
-
-        if (isOpen) return; // chống bấm nhanh
+        if (isOpen) return;
 
         envelope.removeClass("close").addClass("open");
         isOpen = true;
@@ -40,22 +45,66 @@ $(document).ready(function () {
         setTimeout(() => {
             typeCurrentPage();
         }, 800);
+        
+        navigationArea.addClass('show');
+        progressContainer.addClass('show');
+        updateProgress();
     });
 
     /* ======================
        🔄 Đóng thiệp
     ====================== */
     resetBtn.on('click', function () {
-
         envelope.removeClass("open").addClass("close");
         isOpen = false;
 
-        currentPage = 1;
-        stopTyping();
-        updateActivePage();
+        setTimeout(function () {
+            currentPage = 1;
+            updateActivePage();
+            updateProgress();
+            updateNavigationButtons();
+            resetBtn.hide();
+            openBtn.show();
+            navigationArea.removeClass('show');
+            progressContainer.removeClass('show');
+        }, 600);
+    });
 
-        resetBtn.hide();
-        openBtn.show();
+    /* ======================
+       🔘 Nút Trước
+    ====================== */
+    prevBtn.on('click', function() {
+        if (currentPage > 1) {
+            currentPage--;
+            updateActivePage();
+            updateProgress();
+            updateNavigationButtons();
+        }
+    });
+
+    /* ======================
+       🔘 Nút Tiếp - ĐÃ SỬA
+    ====================== */
+    nextBtn.on('click', function() {
+        if (currentPage < totalPages) {
+            nextPage();  // ✅ SỬA: nextLyric() → nextPage()
+        }
+    });
+
+    /* ======================
+       ⌨️ Phím mũi tên - ĐÃ SỬA
+    ====================== */
+    $(document).on('keydown', function(e) {
+        if (!isOpen) return;
+        
+        if (e.key === 'ArrowLeft' && currentPage > 1) {
+            currentPage--;
+            updateActivePage();
+            updateProgress();
+            updateNavigationButtons();
+        } else if (e.key === 'ArrowRight' && currentPage < totalPages) {
+            nextPage();  // ✅ SỬA: nextLyric() → nextPage()
+        }
     });
 
     /* ======================
@@ -66,16 +115,20 @@ $(document).ready(function () {
         nextPage();
     });
 
+    /* ======================
+       📄 Chuyển trang tiếp theo
+    ====================== */
     function nextPage() {
         currentPage = currentPage < totalPages ? currentPage + 1 : 1;
         updateActivePage();
+        updateProgress();
+        updateNavigationButtons();
     }
 
     /* ======================
-       📄 Update trang
+       📄 Update trang hiện tại
     ====================== */
     function updateActivePage() {
-
         $(".lyric-page").removeClass("active");
         $("#page" + currentPage).addClass("active");
 
@@ -91,7 +144,6 @@ $(document).ready(function () {
        ⌨ Typing effect mượt
     ====================== */
     function typeCurrentPage() {
-
         const activePage = document.querySelector(".lyric-page.active p");
         if (!activePage) return;
 
@@ -125,7 +177,6 @@ $(document).ready(function () {
        💖 Hiệu ứng cuối
     ====================== */
     function bigLoveEffect() {
-
         const bigHeart = $("<div class='big-heart'>💗</div>");
         $("body").append(bigHeart);
 
@@ -152,6 +203,23 @@ $(document).ready(function () {
             bigHeart.remove();
             loveText.remove();
         }, 3000);
+    }
+
+    /* ======================
+       📊 Cập nhật Progress Bar
+    ====================== */
+    function updateProgress() {
+        const progress = (currentPage / totalPages) * 100;
+        progressFill.css('width', progress + '%');
+        progressText.text('Trang ' + currentPage + '/' + totalPages);
+    }
+
+    /* ======================
+       🔘 Cập nhật trạng thái nút
+    ====================== */
+    function updateNavigationButtons() {
+        prevBtn.prop('disabled', currentPage === 1);
+        // Không disable nút "Tiếp" - cho phép luôn bấm
     }
 
 });
