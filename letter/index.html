@@ -59,9 +59,26 @@
         </div>
     </div>
     <div class="controls">
+    <!-- Nút Mở/Đóng -->
+    <div class="main-button-area">
         <button id="openBtn">Mở</button>
         <button id="resetBtn" style="display: none;">Đóng</button>
     </div>
+
+    <!-- Nút Trước/Tiếp -->
+    <div class="navigation-area" id="navigationArea">
+        <button class="nav-btn" id="prevBtn" disabled>⬅️ Trước</button>
+        <button class="nav-btn" id="nextBtn">Tiếp ➡️</button>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="progress-container" id="progressContainer">
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-text" id="progressText">Trang 1/25</div>
+    </div>
+</div>
     <audio id="sound" loop>
       <source src="./style/TheWayIStillLoveYou.mp3" type="audio/mpeg" />
     </audio>
